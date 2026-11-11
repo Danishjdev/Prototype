@@ -1,0 +1,1011 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clearpath Platform Demo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a persistent demo switcher on top; four full "apps" below it (public site, portal, admin, automation). */
+:root{
+  --bg:#F5F7FA; --surface:#FFFFFF; --surface-2:#EDF1F6; --fg:#13213A; --muted:#5B6B85; --line:#D7DFEA;
+  --navy:#0E1E3C; --navy-2:#1A2F5A; --accent:#C8702A; --accent-ink:#FFFFFF; --accent-soft:#FBEFE3;
+  --good:#1E8E5A; --good-soft:#E3F5EC; --warn:#B7791F; --warn-soft:#FBF1DC; --bad:#C0392B; --bad-soft:#FBE6E3; --info:#2F6FD6; --info-soft:#E4EDFB;
+  --slack:#4A154B; --shadow:0 1px 2px rgba(14,30,60,.06),0 8px 24px rgba(14,30,60,.08);
+  --display:'Sora',system-ui,sans-serif; --body:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0C1526; --surface:#13203A; --surface-2:#1A2A48; --fg:#E7EDF7; --muted:#9BAAC4; --line:#2A3B5C;
+  --navy:#0A1428; --navy-2:#13203A; --accent:#E08A40; --accent-soft:#3A2614;
+  --good:#3FBF7F; --good-soft:#143826; --warn:#E0A33A; --warn-soft:#3B2E12; --bad:#E5604F; --bad-soft:#3E1A16; --info:#6B9BEB; --info-soft:#16284A;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0C1526; --surface:#13203A; --surface-2:#1A2A48; --fg:#E7EDF7; --muted:#9BAAC4; --line:#2A3B5C;
+  --navy:#0A1428; --navy-2:#13203A; --accent:#E08A40; --accent-soft:#3A2614;
+  --good:#3FBF7F; --good-soft:#143826; --warn:#E0A33A; --warn-soft:#3B2E12; --bad:#E5604F; --bad-soft:#3E1A16; --info:#6B9BEB; --info-soft:#16284A;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
+h1,h2,h3,h4{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.15}
+p{margin:0}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+.num{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- demo bar ---------- */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--navy)}
+.demobar{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--navy);color:#fff;display:flex;align-items:center;gap:14px;padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));flex-wrap:wrap}
+.demobar .tag{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#B9C6DC;display:flex;align-items:center;gap:8px}
+.demobar .tag i{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;box-shadow:0 0 0 3px rgba(200,112,42,.3)}
+.demobar nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.demobar nav button{background:transparent;border:1px solid transparent;color:#C9D4E6;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:500}
+.demobar nav button.on{background:#fff;color:var(--navy);border-color:#fff}
+.demobar nav button:hover:not(.on){border-color:#3A4F78;color:#fff}
+.app{display:none}.app.on{display:block}
+
+/* ---------- public site ---------- */
+.site{background:var(--surface);color:var(--fg)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sitenav{display:flex;align-items:center;gap:28px;padding-block:18px;border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.01em}
+.logo .mk{width:30px;height:30px;border-radius:8px;background:var(--navy);position:relative;overflow:hidden}
+.logo .mk::after{content:"";position:absolute;left:7px;top:7px;width:16px;height:16px;border:3px solid var(--accent);border-left-color:transparent;border-bottom-color:transparent;border-radius:3px;transform:rotate(45deg)}
+.sitenav ul{display:flex;gap:22px;list-style:none;margin:0;padding:0;font-weight:500;font-size:14px;color:var(--muted)}
+.sitenav ul li{cursor:pointer}.sitenav ul li:hover{color:var(--fg)}
+.sitenav .right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:8px;padding:10px 16px;font-weight:600;font-size:14px;border:1px solid transparent;text-decoration:none}
+.btn-p{background:var(--accent);color:var(--accent-ink)}
+.btn-p:hover{filter:brightness(.95)}
+.btn-o{background:transparent;border-color:var(--line);color:var(--fg)}
+.btn-o:hover{background:var(--surface-2)}
+.btn-n{background:var(--navy);color:#fff}
+.btn-sm{padding:7px 12px;font-size:13px}
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;padding-block:64px 56px}
+.hero h1{font-size:clamp(34px,4.6vw,54px);letter-spacing:-.02em}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero .lede{font-size:17px;color:var(--muted);max-width:56ch;margin-top:18px}
+.hero .proof{display:flex;gap:28px;margin-top:30px;flex-wrap:wrap}
+.hero .proof div b{display:block;font-family:var(--display);font-size:26px}
+.hero .proof div span{font-size:13px;color:var(--muted)}
+.leadcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+.leadcard h3{font-size:18px}
+.leadcard .sub{color:var(--muted);font-size:13px;margin-top:4px}
+.field{display:flex;flex-direction:column;gap:5px;margin-top:12px}
+.field label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px;width:100%}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.leadcard .btn{width:100%;justify-content:center;margin-top:16px;padding:12px}
+.leadcard .fine{font-size:12px;color:var(--muted);text-align:center;margin-top:10px}
+.hero-bg{position:relative}
+.hero-bg::before{content:"";position:absolute;inset:-24px -24px -24px -24px;background:radial-gradient(60% 60% at 70% 30%,var(--accent-soft),transparent 70%);z-index:-1;border-radius:30px}
+.sec{padding-block:56px;border-top:1px solid var(--line)}
+.sec h2{font-size:clamp(26px,3vw,34px);letter-spacing:-.015em}
+.sec .intro{color:var(--muted);margin-top:10px;max-width:60ch}
+.sechead{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}
+.svc{border:1px solid var(--line);border-radius:12px;padding:22px;background:var(--surface);display:flex;flex-direction:column;gap:10px;min-width:0}
+.svc .ic{width:40px;height:40px;border-radius:10px;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent)}
+.svc h3{font-size:17px}
+.svc p{color:var(--muted);font-size:14px}
+.svc a{font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;margin-top:auto}
+.prog{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}
+.pcard{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);display:flex;flex-direction:column;min-width:0}
+.pcard .band{background:var(--navy);color:#fff;padding:18px 20px;font-family:var(--display);font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.pcard .band small{font-family:var(--mono);font-size:11px;color:#B9C6DC;letter-spacing:.06em}
+.pcard .body{padding:18px 20px;display:flex;flex-direction:column;gap:10px;flex:1}
+.pcard .meta{display:flex;gap:14px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.pcard ul{margin:0;padding-left:18px;font-size:14px;color:var(--muted)}
+.pcard .foot{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-top:1px solid var(--line);font-weight:600}
+.how{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:30px}
+.step{position:relative;padding:20px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 10px 10px 0}
+.step b{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.08em}
+.step h4{font-size:16px;margin-top:6px}
+.step p{font-size:14px;color:var(--muted);margin-top:6px}
+.faq{max-width:760px;margin-top:26px;display:flex;flex-direction:column;gap:8px}
+.faq details{border:1px solid var(--line);border-radius:10px;padding:0 18px;background:var(--surface)}
+.faq summary{cursor:pointer;padding:14px 0;font-weight:600;list-style:none;display:flex;justify-content:space-between}
+.faq summary::after{content:"+";color:var(--muted);font-weight:400}
+.faq details[open] summary::after{content:"–"}
+.faq details p{padding:0 0 16px;color:var(--muted);font-size:14px}
+.cta{background:var(--navy);color:#fff;border-radius:16px;padding:40px;display:flex;justify-content:space-between;align-items:center;gap:30px;margin-block:20px 56px;flex-wrap:wrap}
+.cta h2{font-size:28px}
+.cta p{color:#B9C6DC;margin-top:6px}
+footer.site-foot{border-top:1px solid var(--line);padding-block:30px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.socials{display:flex;gap:10px}
+.socials span{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;font-family:var(--mono);font-size:11px;font-weight:500}
+
+/* ---------- portal + admin shell ---------- */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 48px)}
+.side{background:var(--navy);color:#C9D4E6;padding:18px 14px;display:flex;flex-direction:column;gap:4px}
+.side .who{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);margin-bottom:14px}
+.av{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-family:var(--display);font-size:14px;flex:none}
+.side .who b{display:block;color:#fff;font-size:14px}
+.side .who span{font-size:12px}
+.side .grp{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#7D8DAA;padding:12px 10px 4px}
+.side button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:0;color:#C9D4E6;padding:9px 10px;border-radius:8px;font-size:14px;font-weight:500}
+.side button.on{background:rgba(255,255,255,.1);color:#fff}
+.side button:hover:not(.on){background:rgba(255,255,255,.05)}
+.side button .cnt{margin-left:auto;background:var(--accent);color:#fff;font-size:11px;padding:1px 7px;border-radius:999px;font-weight:600}
+.side .bottom{margin-top:auto;font-size:12px;color:#7D8DAA;padding:10px}
+.main{padding-block:22px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));min-width:0}
+.main > .mw{max-width:1120px;margin:0 auto}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.topline h2{font-size:22px}
+.topline .sub{color:var(--muted);font-size:13px;margin-top:2px}
+.pane{display:none}.pane.on{display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.card h3{font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.card h3 a{font-size:12px;color:var(--accent);font-weight:600;text-decoration:none}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.kpi{padding:16px 18px}
+.kpi .l{font-size:12px;color:var(--muted);font-weight:500}
+.kpi .v{font-family:var(--display);font-size:28px;margin-top:4px;display:flex;align-items:baseline;gap:8px}
+.kpi .d{font-size:12px;font-weight:600}
+.kpi .d.up{color:var(--good)}.kpi .d.dn{color:var(--bad)}
+.spark{height:34px;margin-top:8px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.info{background:var(--info-soft);color:var(--info)}
+.pill.gray{background:var(--surface-2);color:var(--muted)}
+.pill i{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line)}
+table.t td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.t tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto}
+.list{display:flex;flex-direction:column}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .t1{font-weight:600;font-size:14px}
+.row .t2{font-size:12px;color:var(--muted)}
+.row .end{margin-left:auto;display:flex;gap:8px;align-items:center;flex:none}
+.bar{height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.col{background:var(--surface-2);border-radius:10px;padding:10px;min-width:0}
+.col h4{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;padding:4px 6px 10px;font-family:var(--body);font-weight:600}
+.kc{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;font-size:13px}
+.kc b{display:block;font-weight:600}
+.kc span{color:var(--muted);font-size:12px}
+.kc .amt{font-family:var(--mono);font-size:12px;color:var(--fg);margin-top:6px}
+.kc.new{animation:pop .5s ease;border-color:var(--accent)}
+@keyframes pop{from{transform:translateY(-8px);opacity:0}to{transform:none;opacity:1}}
+.msgs{display:flex;flex-direction:column;gap:10px}
+.msg{max-width:78%;padding:10px 14px;border-radius:12px;font-size:14px;background:var(--surface-2)}
+.msg.me{align-self:flex-end;background:var(--navy);color:#fff}
+.msg small{display:block;font-size:11px;opacity:.7;margin-top:4px}
+.compose{display:flex;gap:8px;margin-top:12px}
+.compose input{flex:1;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--bg)}
+.files{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.file{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;gap:10px;align-items:center;font-size:13px}
+.file .ext{font-family:var(--mono);font-size:10px;font-weight:600;background:var(--surface-2);padding:6px;border-radius:6px;width:40px;text-align:center}
+.file b{display:block;font-weight:600}
+.file span{color:var(--muted);font-size:12px}
+.ann{border-left:3px solid var(--accent);padding:8px 12px;background:var(--accent-soft);border-radius:0 8px 8px 0;font-size:14px;margin-bottom:8px}
+.ann small{display:block;color:var(--muted);font-size:12px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:12px;text-align:center}
+.cal .d{padding:8px 0;border-radius:6px;color:var(--muted)}
+.cal .d.has{background:var(--info-soft);color:var(--info);font-weight:600}
+.cal .d.today{background:var(--accent);color:#fff;font-weight:700}
+.cal .h{font-weight:600;color:var(--muted);padding:4px 0}
+.toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.toggle:last-child{border-bottom:0}
+.sw{width:36px;height:20px;border-radius:999px;background:var(--good);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#fff}
+.sw.off{background:var(--line)}.sw.off::after{right:auto;left:2px}
+.social-q{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.sq{border:1px solid var(--line);border-radius:10px;padding:12px;font-size:13px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.sq .nets{display:flex;gap:6px}
+.sq .nets span{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:4px;background:var(--surface-2);font-weight:500}
+.sq .when{color:var(--muted);font-size:12px}
+.slack{background:#1A1D21;color:#D1D2D3;border-radius:10px;padding:14px;font-size:13px;font-family:var(--body)}
+.slack .ch{font-weight:700;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.slack .ch::before{content:"#";color:#9A9DA2}
+.sm{display:flex;gap:10px;padding:6px 0}
+.sm .bot{width:34px;height:34px;border-radius:6px;background:var(--accent);flex:none;display:grid;place-items:center;font-weight:700;color:#fff;font-size:12px}
+.sm b{color:#fff}.sm .tm{color:#9A9DA2;font-size:11px;margin-left:6px}
+.sm .att{border-left:3px solid var(--accent);padding:6px 10px;margin-top:6px;color:#D1D2D3;background:#222529;border-radius:0 6px 6px 0}
+.sm .att div{display:flex;gap:6px}.sm .att div span:first-child{color:#9A9DA2;min-width:70px}
+.sm.new{animation:pop .5s ease}
+
+/* login */
+.login{min-height:calc(100vh - 48px);display:grid;place-items:center;padding-block:40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--bg)}
+.lbox{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;box-shadow:var(--shadow)}
+.lbox h2{font-size:22px;margin-top:14px}
+.lbox p{color:var(--muted);font-size:14px;margin-top:4px}
+.roles{display:grid;gap:8px;margin-top:20px}
+.roles button{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:12px;width:100%}
+.roles button:hover{border-color:var(--accent);background:var(--accent-soft)}
+.roles button b{display:block;font-size:14px}.roles button span{font-size:12px;color:var(--muted)}
+.roles .av{width:32px;height:32px;font-size:12px}
+.roles .av.c{background:var(--info)}.roles .av.t{background:var(--good)}.roles .av.a{background:var(--navy-2)}
+.lbox .or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:18px 0 12px}
+.lbox .or::before,.lbox .or::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ---------- automation flow ---------- */
+.flowwrap{max-width:1120px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.arch{display:grid;grid-template-columns:1fr 60px 1fr 60px 1fr;gap:0;align-items:stretch;margin-top:22px}
+.node{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0;transition:box-shadow .3s,border-color .3s}
+.node.lit{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.node h4{font-size:14px;display:flex;align-items:center;gap:8px}
+.node h4 .dot{width:10px;height:10px;border-radius:3px;background:var(--navy-2);flex:none}
+.node ul{margin:10px 0 0;padding-left:16px;font-size:13px;color:var(--muted);line-height:1.6}
+.node .st{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:10px;min-height:16px}
+.node .st.ok{color:var(--good)}
+.arrow{display:grid;place-items:center;color:var(--line);font-size:22px;position:relative}
+.arrow::before{content:"";position:absolute;left:8px;right:8px;top:50%;height:2px;background:var(--line)}
+.arrow.lit::before{background:var(--accent)}
+.arrow span{position:relative;background:var(--bg);padding:0 4px;color:var(--line)}
+.arrow.lit span{color:var(--accent)}
+.below{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px}
+.emailprev{border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:13px}
+.emailprev .eh{background:var(--surface-2);padding:10px 14px;display:grid;grid-template-columns:70px 1fr;row-gap:4px;color:var(--muted)}
+.emailprev .eh b{color:var(--fg);font-weight:500}
+.emailprev .eb{padding:16px 14px;line-height:1.6}
+.emailprev .eb .cta{display:inline-block;background:var(--accent);color:#fff;padding:8px 14px;border-radius:6px;font-weight:600;margin:10px 0;font-size:13px}
+.log{font-family:var(--mono);font-size:12px;background:var(--navy);color:#B9C6DC;border-radius:10px;padding:14px;min-height:150px;line-height:1.7}
+.log .ok{color:#6FE3A0}.log .t{color:#7D8DAA}
+.runbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:18px}
+.runbar .hint{font-size:13px;color:var(--muted)}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px}
+.tool{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--surface);min-width:0}
+.tool b{display:block;font-size:14px}
+.tool span{font-size:12px;color:var(--muted);display:block;margin-top:4px}
+.tool .rep{font-size:12px;margin-top:8px;color:var(--accent);font-weight:600}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;box-shadow:var(--shadow);opacity:0;transition:.3s;z-index:70;pointer-events:none;max-width:calc(100vw - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.toast b{color:var(--accent)}
+
+/* ---------- illustrations & infographics ---------- */
+.ico{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.svc .ic{width:44px;height:44px}
+.platform{padding-block:56px;border-top:1px solid var(--line)}
+.platform .inner{display:grid;grid-template-columns:.9fr 1.1fr;gap:40px;align-items:center}
+.platform h2{font-size:clamp(26px,3vw,34px);letter-spacing:-.015em}
+.platform .pts{display:flex;flex-direction:column;gap:14px;margin-top:22px}
+.platform .pt{display:flex;gap:12px;align-items:flex-start;font-size:14px}
+.platform .pt .sw-dot{width:12px;height:12px;border-radius:3px;flex:none;margin-top:5px}
+.platform .pt b{display:block}
+.platform .pt span{color:var(--muted)}
+.iso{width:100%;height:auto;max-width:100%;display:block}
+.iso text{font-family:var(--body);font-size:11px;font-weight:600;fill:var(--fg)}
+.iso .lbl-s{font-weight:400;fill:var(--muted);font-size:10px}
+.iso .edge{stroke:var(--line);stroke-width:1.5;stroke-dasharray:3 4;fill:none}
+.iso .pulse{fill:var(--accent)}
+.numbers{background:var(--navy);color:#fff;padding-block:40px;padding-inline:36px;border-radius:16px;margin-block:8px 0}
+.numbers .inner{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.ring{display:flex;gap:16px;align-items:center;min-width:0}
+.ring svg{width:84px;height:84px;flex:none}
+.ring circle{fill:none;stroke-width:8}
+.ring .track{stroke:rgba(255,255,255,.12)}
+.ring .val{stroke:var(--accent);stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%}
+.ring text{fill:#fff;font-family:var(--display);font-weight:600;font-size:17px}
+.ring b{display:block;font-family:var(--display);font-size:17px;line-height:1.2}
+.ring span{font-size:13px;color:#B9C6DC}
+.timeline{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:34px}
+.timeline::before{content:"";position:absolute;left:5%;right:5%;top:44px;height:2px;background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 14px)}
+.tstep{position:relative;padding-top:16px;min-width:0}
+.tstep .ill{width:58px;height:58px;border-radius:14px;background:var(--surface);border:2px solid var(--accent);display:grid;place-items:center;color:var(--accent);position:relative;z-index:1}
+.tstep .ill svg{width:28px;height:28px}
+.tstep .dur{font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:14px}
+.tstep h4{font-size:16px;margin-top:4px}
+.tstep p{font-size:14px;color:var(--muted);margin-top:6px}
+.donut{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.donut svg{width:150px;height:150px;flex:none}
+.donut circle{fill:none;stroke-width:22;transform:rotate(-90deg);transform-origin:50% 50%}
+.donut .leg{display:flex;flex-direction:column;gap:8px;font-size:13px;min-width:0}
+.donut .leg div{display:flex;align-items:center;gap:8px}
+.donut .leg i{width:10px;height:10px;border-radius:2px;flex:none}
+.donut .leg b{margin-left:auto;font-family:var(--mono);font-weight:500}
+.progress-ring{display:flex;align-items:center;gap:12px}
+.progress-ring svg{width:56px;height:56px}
+.progress-ring circle{fill:none;stroke-width:6}
+.progress-ring .tr{stroke:var(--surface-2)}
+.progress-ring .vl{stroke:var(--accent);stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%}
+.hbars{display:flex;flex-direction:column;gap:10px;margin-top:12px;font-size:13px}
+.hbars div{display:grid;grid-template-columns:130px 1fr 36px;align-items:center;gap:10px}
+.hbars .bar{height:10px}
+.hbars .bar i{background:var(--info)}
+.hbars b{font-family:var(--mono);font-weight:500;text-align:right}
+.node .nic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:#fff;margin-bottom:10px}
+.node .nic svg{width:22px;height:22px}
+.weekgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+.weekgrid div{height:38px;border-radius:5px;background:var(--surface-2);position:relative;overflow:hidden}
+.weekgrid div i{position:absolute;left:0;right:0;bottom:0;background:var(--info);opacity:.85;border-radius:5px 5px 0 0}
+.weekgrid span{display:block;font-size:10px;color:var(--muted);text-align:center;margin-top:3px;grid-row:2}
+.weeklabels{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:10px;color:var(--muted);text-align:center;margin-top:4px}
+
+@media (max-width:980px){
+  .hero{grid-template-columns:1fr;gap:30px;padding-block:40px}
+  .platform .inner{grid-template-columns:1fr}
+  .numbers .inner,.timeline{grid-template-columns:1fr 1fr}
+  .timeline::before{display:none}
+  .grid3,.prog{grid-template-columns:1fr 1fr}
+  .how{grid-template-columns:1fr 1fr}
+  .shell{grid-template-columns:1fr}
+  .side{flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px}
+  .side .who{margin:0;width:100%}
+  .side .grp{display:none}.side button{width:auto}.side .bottom{display:none}
+  .g3,.g4,.kanban,.social-q,.tools{grid-template-columns:1fr 1fr}
+  .arch{grid-template-columns:1fr}.arrow{height:40px}.arrow::before{left:50%;right:auto;top:6px;bottom:6px;width:2px;height:auto}
+  .below{grid-template-columns:1fr}
+}
+@media (max-width:620px){
+  .sitenav ul{display:none}
+  .grid3,.prog,.how,.g2,.g3,.g4,.kanban,.social-q,.tools,.files,.two,.numbers .inner,.timeline{grid-template-columns:1fr}
+  .hbars div{grid-template-columns:100px 1fr 36px}
+  .cta{padding:26px}
+}
+</style>
+</head>
+<body>
+
+<div class="demobar">
+  <div class="tag"><i></i> Prototype · Clearpath IT Consulting &amp; Training</div>
+  <nav>
+    <button class="on" data-app="site">Public website</button>
+    <button data-app="portal">Client portal</button>
+    <button data-app="admin">Admin dashboard</button>
+    <button data-app="flow">Automation</button>
+  </nav>
+</div>
+
+<!-- ================= PUBLIC SITE ================= -->
+<section class="app site on" id="app-site">
+  <div class="wrap">
+    <div class="sitenav">
+      <div class="logo"><span class="mk"></span> Clearpath</div>
+      <ul><li>Services</li><li>Training programs</li><li>Software</li><li>About</li><li>FAQs</li><li>Contact</li></ul>
+      <div class="right">
+        <button class="btn btn-o btn-sm" data-go="portal">Client login</button>
+        <button class="btn btn-p btn-sm" onclick="document.getElementById('lead-name').focus()">Book a consultation</button>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div>
+        <h1>IT consulting and hands-on training for teams that need to <em>move faster</em> without adding headcount.</h1>
+        <p class="lede">Clearpath helps small and mid-sized companies modernize their systems, train their people on the tools they already pay for, and build the software that fills the gaps. One partner, one plan, measurable outcomes.</p>
+        <div class="proof">
+          <div><b class="num">140+</b><span>client engagements since 2018</span></div>
+          <div><b class="num">2,300</b><span>professionals trained</span></div>
+          <div><b class="num">4.9 / 5</b><span>average training rating</span></div>
+        </div>
+      </div>
+      <div class="hero-bg">
+        <form class="leadcard" id="leadform">
+          <h3>Book a free 30-minute consultation</h3>
+          <p class="sub">Tell us what you're working on. You pick a time on the next screen.</p>
+          <div class="two">
+            <div class="field"><label for="lead-name">Full name</label><input id="lead-name" placeholder="Jordan Lee" required></div>
+            <div class="field"><label for="lead-co">Company</label><input id="lead-co" placeholder="Acme Logistics"></div>
+          </div>
+          <div class="field"><label for="lead-email">Work email</label><input id="lead-email" type="email" placeholder="jordan@acme.com" required></div>
+          <div class="field"><label for="lead-svc">What do you need help with?</label>
+            <select id="lead-svc"><option>IT consulting / systems review</option><option>Team training program</option><option>Custom software</option><option>Career development coaching</option><option>Not sure yet</option></select></div>
+          <div class="field"><label for="lead-msg">Anything else?</label><textarea id="lead-msg" rows="2" placeholder="We're migrating to Microsoft 365 next quarter and need the team up to speed."></textarea></div>
+          <button class="btn btn-p" type="submit">Request a consultation</button>
+          <p class="fine">Goes straight to our CRM. You'll get a confirmation email within a minute.</p>
+        </form>
+      </div>
+    </div>
+
+    <div class="platform">
+      <div class="inner">
+        <div>
+          <h2>One platform behind the whole business</h2>
+          <p class="intro" style="color:var(--muted);margin-top:10px">A visitor books on the website, lands in the CRM, gets a confirmation and a reminder, logs in to the portal, and the administrator sees all of it from a single dashboard. No copying between tools.</p>
+          <div class="pts">
+            <div class="pt"><span class="sw-dot" style="background:var(--navy-2)"></span><div><b>Website and client portal</b><span>WordPress, editable by one admin</span></div></div>
+            <div class="pt"><span class="sw-dot" style="background:var(--accent)"></span><div><b>Operations hub</b><span>CRM, bookings, email automations, newsletters, social planner</span></div></div>
+            <div class="pt"><span class="sw-dot" style="background:var(--info)"></span><div><b>Calendar and business email</b><span>Outlook or Google, with Teams, Meet or Zoom links</span></div></div>
+            <div class="pt"><span class="sw-dot" style="background:var(--slack)"></span><div><b>Slack alerts</b><span>Inquiries, bookings, sign-ups and request updates as they happen</span></div></div>
+          </div>
+        </div>
+        <svg class="iso" id="iso-hero" viewBox="-310 -70 620 390" aria-label="Isometric diagram of the website, portal, CRM, calendar and Slack feeding one admin dashboard"></svg>
+      </div>
+    </div>
+
+    <div class="sec" id="svc">
+      <div class="sechead"><div><h2>Services</h2><p class="intro">Each service has its own page, editable by your admin from the WordPress dashboard. No developer needed to change pricing, add a case study or publish a new offer.</p></div></div>
+      <div class="grid3">
+        <div class="svc"><div class="ic"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4M7 9h4M7 12h7"/></svg></div><h3>IT Consulting</h3><p>Infrastructure reviews, cloud migration planning, security baselines and vendor selection for teams of 10 to 500.</p><a>See how we work</a></div>
+        <div class="svc"><div class="ic"><svg class="ico" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></div><h3>Software Solutions</h3><p>Internal tools, integrations and client-facing apps built on what you already run, from Microsoft 365 to custom web applications.</p><a>View recent builds</a></div>
+        <div class="svc"><div class="ic"><svg class="ico" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M7 10v5c0 1.5 2.5 3 5 3s5-1.5 5-3v-5M21 8v6"/></svg></div><h3>Professional Training</h3><p>Live and self-paced courses in cybersecurity awareness, cloud fundamentals, data analysis and project management.</p><a>Browse programs</a></div>
+        <div class="svc"><div class="ic"><svg class="ico" viewBox="0 0 24 24"><path d="M4 19l5-6 4 3 7-9"/><path d="M15 7h5v5"/></svg></div><h3>Career Development</h3><p>Certification roadmaps, one-to-one coaching and interview preparation for people moving into or up in tech.</p><a>Book a coaching call</a></div>
+        <div class="svc"><div class="ic"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Managed Technology Services</h3><p>Ongoing support, monitoring and quarterly reviews so your systems stay healthy after the project ends.</p><a>Compare plans</a></div>
+        <div class="svc"><div class="ic"><svg class="ico" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h6M9 16h6"/></svg></div><h3>Documentation &amp; Process Design</h3><p>Runbooks, SOPs and onboarding guides your team will actually use, written with them, not for them.</p><a>See a sample</a></div>
+      </div>
+    </div>
+
+    <div class="numbers">
+      <div class="inner">
+        <div class="ring"><svg viewBox="0 0 84 84"><circle class="track" cx="42" cy="42" r="34"/><circle class="val" cx="42" cy="42" r="34" stroke-dasharray="213.6" stroke-dashoffset="12.8"/><text x="42" y="47" text-anchor="middle">94%</text></svg><div><b>Client retention</b><span>stay on a support plan after year one</span></div></div>
+        <div class="ring"><svg viewBox="0 0 84 84"><circle class="track" cx="42" cy="42" r="34"/><circle class="val" cx="42" cy="42" r="34" stroke-dasharray="213.6" stroke-dashoffset="19.2"/><text x="42" y="47" text-anchor="middle">91%</text></svg><div><b>Course completion</b><span>across cohort-based programs</span></div></div>
+        <div class="ring"><svg viewBox="0 0 84 84"><circle class="track" cx="42" cy="42" r="34"/><circle class="val" cx="42" cy="42" r="34" stroke-dasharray="213.6" stroke-dashoffset="106.8"/><text x="42" y="47" text-anchor="middle">&lt;2h</text></svg><div><b>First response</b><span>median time on service requests</span></div></div>
+        <div class="ring"><svg viewBox="0 0 84 84"><circle class="track" cx="42" cy="42" r="34"/><circle class="val" cx="42" cy="42" r="34" stroke-dasharray="213.6" stroke-dashoffset="64"/><text x="42" y="47" text-anchor="middle">38%</text></svg><div><b>Less admin time</b><span>reported by clients after automation</span></div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechead"><div><h2>Training programs</h2><p class="intro">Cohort-based and self-paced. Everything a participant needs lives in the client portal after enrollment.</p></div><button class="btn btn-o" data-go="portal">See the participant portal</button></div>
+      <div class="prog">
+        <div class="pcard"><div class="band">Cybersecurity Essentials <small>6 WKS</small></div><div class="body"><div class="meta"><span>Live · Tuesdays 6pm ET</span><span>Next cohort Jan 13</span></div><ul><li>Phishing, MFA and password hygiene</li><li>Device and data protection</li><li>Incident response basics</li></ul></div><div class="foot"><span class="num">$1,200 / seat</span><button class="btn btn-n btn-sm">Enroll</button></div></div>
+        <div class="pcard"><div class="band">Cloud Fundamentals (Azure &amp; M365) <small>8 WKS</small></div><div class="body"><div class="meta"><span>Hybrid</span><span>Next cohort Feb 3</span></div><ul><li>Identity, Teams and SharePoint admin</li><li>Backup, retention and compliance</li><li>Cost control and licensing</li></ul></div><div class="foot"><span class="num">$1,650 / seat</span><button class="btn btn-n btn-sm">Enroll</button></div></div>
+        <div class="pcard"><div class="band">Data Analysis with Power BI <small>SELF-PACED</small></div><div class="body"><div class="meta"><span>12 modules · 14 hrs</span><span>Start anytime</span></div><ul><li>Data modelling and DAX basics</li><li>Dashboards stakeholders read</li><li>Capstone reviewed by a trainer</li></ul></div><div class="foot"><span class="num">$490</span><button class="btn btn-n btn-sm">Enroll</button></div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>How an engagement works</h2>
+      <p class="intro">Four stages. You see each one move in your portal.</p>
+      <div class="timeline">
+        <div class="tstep"><div class="ill"><svg class="ico" viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></div><div class="dur">Day 1 · 30 min</div><h4>Discovery call</h4><p>We map what you have, what's breaking and what's costing you time.</p></div>
+        <div class="tstep"><div class="ill"><svg class="ico" viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5z"/><path d="M9 12h6M9 16h6M9 8h3"/></svg></div><div class="dur">Within 5 working days</div><h4>Written plan</h4><p>Scope, timeline and fixed price in your portal. You approve each phase.</p></div>
+        <div class="tstep"><div class="ill"><svg class="ico" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div><div class="dur">2 to 10 weeks</div><h4>Delivery and training</h4><p>Your team sees progress in the portal and learns the system as it's built.</p></div>
+        <div class="tstep"><div class="ill"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg></div><div class="dur">Ongoing, optional</div><h4>Handover and support</h4><p>Documentation, a recorded walkthrough, and a support plan if you want one.</p></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>Frequently asked questions</h2>
+      <div class="faq">
+        <details open><summary>Do we have to be local to work with you?</summary><p>No. About 80% of our engagements are fully remote. Consultations run on Teams, Zoom or Google Meet, whichever you use.</p></details>
+        <details><summary>How is pricing structured?</summary><p>Consulting and software projects are fixed-price per phase. Training is priced per seat with team discounts from 5 seats. Managed services are a monthly plan.</p></details>
+        <details><summary>What do participants get access to after enrolling?</summary><p>A portal login with the course schedule, recordings, downloadable materials, assignments and a direct message line to their trainer.</p></details>
+        <details><summary>Can we request support after a project ends?</summary><p>Yes. Submit a service request in the portal; you'll see its status and who's handling it, and you'll get an email and portal notification when it's resolved.</p></details>
+      </div>
+    </div>
+
+    <div class="cta"><div><h2>Not sure where to start?</h2><p>Book a 30-minute consultation. No pitch, just a clear picture of your options.</p></div><button class="btn btn-p" onclick="document.getElementById('lead-name').scrollIntoView({behavior:'smooth'});document.getElementById('lead-name').focus()">Book a consultation</button></div>
+
+    <footer class="site-foot">
+      <div>© 2026 Clearpath IT Consulting &amp; Training · hello@clearpath-it.com · (312) 555-0148</div>
+      <div class="socials" title="Social links managed from the admin dashboard"><span>in</span><span>ig</span><span>fb</span><span>yt</span></div>
+    </footer>
+  </div>
+</section>
+
+<!-- ================= CLIENT PORTAL ================= -->
+<section class="app" id="app-portal">
+  <div class="login" id="portal-login">
+    <div class="lbox">
+      <div class="logo"><span class="mk"></span> Clearpath Portal</div>
+      <h2>Sign in</h2>
+      <p>One portal, three roles. Each sees only what their role allows.</p>
+      <div class="roles">
+        <button data-role="client"><span class="av c">JL</span><div><b>Jordan Lee · Client</b><span>Acme Logistics · 2 active services, 1 training program</span></div></button>
+        <button data-role="trainer"><span class="av t">MR</span><div><b>Maya Rodriguez · Trainer</b><span>Runs Cybersecurity Essentials · 14 participants</span></div></button>
+        <button data-role="admin"><span class="av a">TM</span><div><b>Trevor Mercer · Administrator</b><span>Full access · opens the admin dashboard</span></div></button>
+      </div>
+      <div class="or">or sign in with email</div>
+      <div class="field"><input placeholder="you@company.com" id="login-email"></div>
+      <div class="field"><input type="password" placeholder="Password" id="login-pw"></div>
+      <button class="btn btn-n" style="width:100%;justify-content:center;margin-top:14px">Sign in</button>
+      <p style="text-align:center;font-size:12px;margin-top:12px">New client? <b>Create an account</b> · Forgot password</p>
+    </div>
+  </div>
+
+  <!-- client view -->
+  <div class="shell" id="portal-client" hidden>
+    <aside class="side">
+      <div class="who"><span class="av" style="background:var(--info)">JL</span><div><b>Jordan Lee</b><span>Acme Logistics · Client</span></div></div>
+      <div class="grp">My account</div>
+      <button class="on" data-pane="c-dash">⌂ Dashboard</button>
+      <button data-pane="c-services">◆ My services</button>
+      <button data-pane="c-training">◉ Training <span class="cnt">1</span></button>
+      <button data-pane="c-docs">▤ Documents</button>
+      <button data-pane="c-req">✎ Service requests <span class="cnt">2</span></button>
+      <button data-pane="c-msg">✉ Messages <span class="cnt">1</span></button>
+      <button data-pane="c-book">▦ Book a call</button>
+      <div class="bottom">Signed in as client · <u style="cursor:pointer" data-go="portal-login">Sign out</u></div>
+    </aside>
+    <div class="main"><div class="mw">
+      <div class="pane on" id="c-dash">
+        <div class="topline"><div><h2>Good morning, Jordan</h2><p class="sub">Here's where everything stands for Acme Logistics.</p></div><button class="btn btn-p btn-sm" data-pane-go="c-book">Book a consultation</button></div>
+        <div class="g3">
+          <div class="card kpi"><div class="l">Active services</div><div class="v num">2</div><div class="d">M365 migration · Managed support</div></div>
+          <div class="card kpi"><div class="l">Training progress</div><div class="progress-ring" style="margin-top:6px"><svg viewBox="0 0 56 56"><circle class="tr" cx="28" cy="28" r="23"/><circle class="vl" cx="28" cy="28" r="23" stroke-dasharray="144.5" stroke-dashoffset="60.7"/></svg><div><div class="v num" style="font-size:24px">58%</div><div style="font-size:12px;color:var(--muted)">3 of 6 modules · week 3</div></div></div></div>
+          <div class="card kpi"><div class="l">Open requests</div><div class="v num">2 <span class="pill warn"><i></i>1 awaiting you</span></div></div>
+        </div>
+        <div class="g2" style="margin-top:16px">
+          <div class="card"><h3>Announcements</h3>
+            <div style="margin-top:12px"><div class="ann">Cohort 12 session on Nov 18 moves to 7pm ET. Recording posted same night.<small>Posted by Maya R. · 2 days ago</small></div><div class="ann" style="border-color:var(--info);background:var(--info-soft)">New: Power BI self-paced course now in the catalog. Existing clients get 20% off.<small>Posted by Clearpath · 1 week ago</small></div></div></div>
+          <div class="card"><h3>Upcoming</h3>
+            <div class="list" style="margin-top:4px">
+              <div class="row"><div><div class="t1">M365 migration check-in</div><div class="t2">Thu Nov 12 · 10:00 AM ET · Teams</div></div><div class="end"><span class="pill info"><i></i>Confirmed</span></div></div>
+              <div class="row"><div><div class="t1">Cybersecurity Essentials · Week 4</div><div class="t2">Tue Nov 17 · 6:00 PM ET · Zoom</div></div><div class="end"><span class="pill gray">Live session</span></div></div>
+              <div class="row"><div><div class="t1">Quarterly systems review</div><div class="t2">Tue Dec 1 · 2:00 PM ET</div></div><div class="end"><span class="pill gray">Proposed</span></div></div>
+            </div></div>
+        </div>
+      </div>
+
+      <div class="pane" id="c-services">
+        <div class="topline"><div><h2>My services</h2><p class="sub">Everything you've purchased or subscribed to, with current status.</p></div></div>
+        <div class="stack">
+          <div class="card"><h3>Microsoft 365 migration <span class="pill info"><i></i>Phase 2 of 3 · In progress</span></h3>
+            <p style="color:var(--muted);font-size:14px;margin-top:8px">Moving 42 mailboxes and 1.8 TB of file shares from on-prem to SharePoint and Exchange Online. Phase 2 covers pilot group migration and Teams setup.</p>
+            <div class="bar" style="margin-top:14px"><i style="width:62%"></i></div>
+            <div class="list" style="margin-top:10px"><div class="row"><div><div class="t1">Phase 1 · Discovery and tenant setup</div><div class="t2">Completed Oct 24</div></div><div class="end"><span class="pill good"><i></i>Done</span></div></div><div class="row"><div><div class="t1">Phase 2 · Pilot migration (12 users)</div><div class="t2">Due Nov 20 · Lead: Ravi K.</div></div><div class="end"><span class="pill info"><i></i>In progress</span></div></div><div class="row"><div><div class="t1">Phase 3 · Full cutover and training</div><div class="t2">Starts Nov 23</div></div><div class="end"><span class="pill gray">Scheduled</span></div></div></div></div>
+          <div class="card"><h3>Managed Technology Support · Standard plan <span class="pill good"><i></i>Active · renews Dec 1</span></h3><p style="color:var(--muted);font-size:14px;margin-top:8px">Up to 10 hours/month of support, monitoring and a quarterly review. 6.5 hours used this month.</p><div class="bar" style="margin-top:12px"><i style="width:65%;background:var(--good)"></i></div></div>
+        </div>
+      </div>
+
+      <div class="pane" id="c-training">
+        <div class="topline"><div><h2>Training</h2><p class="sub">Cybersecurity Essentials · Cohort 12 · Trainer: Maya Rodriguez</p></div><span class="pill info"><i></i>Week 3 of 6</span></div>
+        <div class="g2">
+          <div class="card"><h3>Modules</h3>
+            <div class="list" style="margin-top:4px">
+              <div class="row"><div><div class="t1">1 · Why attackers target small teams</div><div class="t2">Recording · 48 min · Slides</div></div><div class="end"><span class="pill good"><i></i>Complete</span></div></div>
+              <div class="row"><div><div class="t1">2 · Phishing and social engineering</div><div class="t2">Recording · 52 min · Quiz 9/10</div></div><div class="end"><span class="pill good"><i></i>Complete</span></div></div>
+              <div class="row"><div><div class="t1">3 · MFA, passwords and password managers</div><div class="t2">Recording · 46 min · Assignment due Nov 16</div></div><div class="end"><span class="pill warn"><i></i>Assignment due</span></div></div>
+              <div class="row"><div><div class="t1">4 · Device and data protection</div><div class="t2">Live · Nov 17, 6pm ET</div></div><div class="end"><span class="pill gray">Upcoming</span></div></div>
+              <div class="row"><div><div class="t1">5 · Incident response basics</div><div class="t2">Live · Nov 24</div></div><div class="end"><span class="pill gray">Locked</span></div></div>
+              <div class="row"><div><div class="t1">6 · Capstone and certificate</div><div class="t2">Live · Dec 1</div></div><div class="end"><span class="pill gray">Locked</span></div></div>
+            </div></div>
+          <div class="stack">
+            <div class="card"><h3>Course materials</h3><div class="files" style="margin-top:12px;grid-template-columns:1fr">
+              <div class="file"><span class="ext">PDF</span><div><b>Week 3 slides</b><span>2.4 MB · Nov 10</span></div></div>
+              <div class="file"><span class="ext">XLSX</span><div><b>Password policy template</b><span>38 KB · Nov 10</span></div></div>
+              <div class="file"><span class="ext">MP4</span><div><b>Week 2 recording</b><span>52 min · Nov 3</span></div></div></div></div>
+            <div class="card"><h3>Your trainer</h3><div class="row" style="border:0"><span class="av" style="background:var(--good)">MR</span><div><div class="t1">Maya Rodriguez</div><div class="t2">Replies within 1 business day</div></div><div class="end"><button class="btn btn-o btn-sm" data-pane-go="c-msg">Message</button></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane" id="c-docs">
+        <div class="topline"><div><h2>Documents</h2><p class="sub">Shared between you and Clearpath. Upload anything we need from your side.</p></div><button class="btn btn-o btn-sm">⇧ Upload</button></div>
+        <div class="card"><div class="files">
+          <div class="file"><span class="ext">PDF</span><div><b>Statement of Work · M365 migration</b><span>Signed Oct 20</span></div></div>
+          <div class="file"><span class="ext">PDF</span><div><b>Phase 1 report</b><span>Oct 24</span></div></div>
+          <div class="file"><span class="ext">XLSX</span><div><b>Mailbox inventory</b><span>You uploaded · Oct 15</span></div></div>
+          <div class="file"><span class="ext">DOCX</span><div><b>Teams channel structure</b><span>Draft · Nov 6</span></div></div>
+          <div class="file"><span class="ext">PDF</span><div><b>Invoice CP-2026-118</b><span>Paid · Nov 1</span></div></div>
+          <div class="file"><span class="ext">PDF</span><div><b>Support plan agreement</b><span>Signed Sep 2</span></div></div>
+        </div></div>
+      </div>
+
+      <div class="pane" id="c-req">
+        <div class="topline"><div><h2>Service requests</h2><p class="sub">Submit a request, track its status, and get notified when it moves.</p></div><button class="btn btn-p btn-sm" id="newreq">+ New request</button></div>
+        <div class="card tw"><table class="t">
+          <thead><tr><th>ID</th><th>Request</th><th>Submitted</th><th>Handled by</th><th>Status</th></tr></thead>
+          <tbody id="reqbody">
+            <tr><td class="num">SR-1042</td><td>Shared mailbox for sales@ not syncing to mobile</td><td>Nov 8</td><td>Ravi K.</td><td><span class="pill info"><i></i>In progress</span></td></tr>
+            <tr><td class="num">SR-1039</td><td>Add 3 new users to pilot group</td><td>Nov 5</td><td>Ravi K.</td><td><span class="pill warn"><i></i>Awaiting your approval</span></td></tr>
+            <tr><td class="num">SR-1031</td><td>Restore deleted Finance folder</td><td>Oct 28</td><td>Priya N.</td><td><span class="pill good"><i></i>Resolved</span></td></tr>
+            <tr><td class="num">SR-1027</td><td>VPN access for contractor</td><td>Oct 21</td><td>Priya N.</td><td><span class="pill good"><i></i>Resolved</span></td></tr>
+          </tbody></table></div>
+      </div>
+
+      <div class="pane" id="c-msg">
+        <div class="topline"><div><h2>Messages</h2><p class="sub">Conversation with your Clearpath team. Admins see every thread.</p></div></div>
+        <div class="card"><div class="msgs">
+          <div class="msg">Hi Jordan, Phase 2 pilot starts Monday. We'll migrate the 12 users in the list you approved. Expect a 10-minute Outlook restart on their side.<small>Ravi K. · Nov 6, 3:12 PM</small></div>
+          <div class="msg me">Thanks. Can we add the 3 new hires too? Their accounts were created yesterday.<small>You · Nov 6, 4:40 PM</small></div>
+          <div class="msg">Yes. I've logged it as SR-1039; approve the scope change there and they're in.<small>Ravi K. · Nov 6, 4:55 PM</small></div>
+          <div class="msg">Reminder: your Week 3 assignment is due Nov 16. Let me know if you need an extension.<small>Maya R. · Today, 8:05 AM</small></div>
+        </div><div class="compose"><input placeholder="Write a message…" id="c-compose"><button class="btn btn-n">Send</button></div></div>
+      </div>
+
+      <div class="pane" id="c-book">
+        <div class="topline"><div><h2>Book a call</h2><p class="sub">Pick a time. The invite goes to your calendar with a Teams link, and a reminder arrives 24 hours and 1 hour before.</p></div></div>
+        <div class="g2">
+          <div class="card"><h3>November 2026</h3><div class="cal" style="margin-top:12px">
+            <div class="h">Mo</div><div class="h">Tu</div><div class="h">We</div><div class="h">Th</div><div class="h">Fr</div><div class="h">Sa</div><div class="h">Su</div>
+            <div class="d" style="opacity:.3">26</div><div class="d" style="opacity:.3">27</div><div class="d" style="opacity:.3">28</div><div class="d" style="opacity:.3">29</div><div class="d" style="opacity:.3">30</div><div class="d" style="opacity:.3">31</div><div class="d">1</div>
+            <div class="d">2</div><div class="d">3</div><div class="d">4</div><div class="d">5</div><div class="d">6</div><div class="d">7</div><div class="d">8</div>
+            <div class="d today">9</div><div class="d has">10</div><div class="d has">11</div><div class="d has">12</div><div class="d has">13</div><div class="d">14</div><div class="d">15</div>
+            <div class="d has">16</div><div class="d has">17</div><div class="d has">18</div><div class="d has">19</div><div class="d has">20</div><div class="d">21</div><div class="d">22</div>
+            <div class="d has">23</div><div class="d has">24</div><div class="d has">25</div><div class="d">26</div><div class="d">27</div><div class="d">28</div><div class="d">29</div>
+            <div class="d has">30</div></div><p style="font-size:12px;color:var(--muted);margin-top:10px">Availability pulled live from the consultant's Outlook calendar.</p></div>
+          <div class="card"><h3>Wednesday, Nov 11 · 30-min consultation</h3><div class="roles" style="margin-top:10px">
+            <button><b>10:00 AM ET</b></button><button><b>10:30 AM ET</b></button><button><b>11:30 AM ET</b></button><button><b>1:00 PM ET</b></button></div>
+            <p style="font-size:13px;color:var(--muted);margin-top:12px">Times shown in your timezone (America/New_York). Meeting link: Microsoft Teams.</p></div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- trainer view -->
+  <div class="shell" id="portal-trainer" hidden>
+    <aside class="side">
+      <div class="who"><span class="av" style="background:var(--good)">MR</span><div><b>Maya Rodriguez</b><span>Trainer</span></div></div>
+      <div class="grp">Teaching</div>
+      <button class="on" data-pane="t-dash">⌂ My cohorts</button>
+      <button data-pane="t-mat">▤ Materials</button>
+      <button data-pane="t-msg">✉ Messages <span class="cnt">3</span></button>
+      <div class="bottom">Signed in as trainer · <u style="cursor:pointer" data-go="portal-login">Sign out</u></div>
+    </aside>
+    <div class="main"><div class="mw">
+      <div class="pane on" id="t-dash">
+        <div class="topline"><div><h2>Cybersecurity Essentials · Cohort 12</h2><p class="sub">14 participants · Week 3 of 6 · Next live session Tue Nov 17, 6pm ET</p></div><button class="btn btn-p btn-sm">Post announcement</button></div>
+        <div class="g3"><div class="card kpi"><div class="l">Avg. completion</div><div class="v num">61%</div></div><div class="card kpi"><div class="l">Assignments pending review</div><div class="v num">5</div></div><div class="card kpi"><div class="l">Attendance last session</div><div class="v num">12 / 14</div></div></div>
+        <div class="card tw" style="margin-top:16px"><h3>Participants</h3><table class="t" style="margin-top:8px"><thead><tr><th>Participant</th><th>Company</th><th>Progress</th><th>Week 3 assignment</th><th>Last active</th></tr></thead><tbody>
+          <tr><td>Jordan Lee</td><td>Acme Logistics</td><td style="min-width:140px"><div class="bar"><i style="width:58%"></i></div></td><td><span class="pill warn"><i></i>Due Nov 16</span></td><td>Today</td></tr>
+          <tr><td>Priya Shah</td><td>Harbor Dental Group</td><td><div class="bar"><i style="width:83%"></i></div></td><td><span class="pill info"><i></i>Submitted</span></td><td>Yesterday</td></tr>
+          <tr><td>Tom Okafor</td><td>Harbor Dental Group</td><td><div class="bar"><i style="width:75%"></i></div></td><td><span class="pill info"><i></i>Submitted</span></td><td>Yesterday</td></tr>
+          <tr><td>Elena Petrova</td><td>Northwind Freight</td><td><div class="bar"><i style="width:33%"></i></div></td><td><span class="pill bad"><i></i>Not started</span></td><td>6 days ago</td></tr>
+          <tr><td>Marcus Bell</td><td>Northwind Freight</td><td><div class="bar"><i style="width:66%"></i></div></td><td><span class="pill good"><i></i>Reviewed · 9/10</span></td><td>2 days ago</td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="pane" id="t-mat"><div class="topline"><div><h2>Materials</h2><p class="sub">Upload once; every participant in the cohort sees it instantly and gets a notification.</p></div><button class="btn btn-p btn-sm">⇧ Upload material</button></div>
+        <div class="card"><div class="files"><div class="file"><span class="ext">PDF</span><div><b>Week 3 slides</b><span>Visible to Cohort 12</span></div></div><div class="file"><span class="ext">XLSX</span><div><b>Password policy template</b><span>Visible to Cohort 12</span></div></div><div class="file"><span class="ext">MP4</span><div><b>Week 2 recording</b><span>Visible to Cohort 12</span></div></div><div class="file"><span class="ext">PDF</span><div><b>Week 4 slides</b><span>Draft · publish Nov 17</span></div></div></div></div></div>
+      <div class="pane" id="t-msg"><div class="topline"><div><h2>Messages</h2></div></div><div class="card"><div class="list"><div class="row"><span class="av" style="background:var(--info)">JL</span><div><div class="t1">Jordan Lee</div><div class="t2">Reminder sent about Week 3 assignment</div></div><div class="end"><span class="t2">8:05 AM</span></div></div><div class="row"><span class="av" style="background:var(--navy-2)">EP</span><div><div class="t1">Elena Petrova</div><div class="t2">Can I get the Week 2 recording link again?</div></div><div class="end"><span class="pill warn"><i></i>Unread</span></div></div><div class="row"><span class="av" style="background:var(--navy-2)">TO</span><div><div class="t1">Tom Okafor</div><div class="t2">Submitted assignment, let me know if the format works</div></div><div class="end"><span class="pill warn"><i></i>Unread</span></div></div></div></div></div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ================= ADMIN DASHBOARD ================= -->
+<section class="app" id="app-admin">
+  <div class="shell">
+    <aside class="side">
+      <div class="who"><span class="av" style="background:var(--navy-2)">TM</span><div><b>Trevor Mercer</b><span>Administrator</span></div></div>
+      <div class="grp">Today</div>
+      <button class="on" data-pane="a-dash">⌂ Overview</button>
+      <button data-pane="a-crm">◆ Leads &amp; CRM <span class="cnt" id="leadcount">7</span></button>
+      <button data-pane="a-book">▦ Bookings</button>
+      <button data-pane="a-req">✎ Service requests <span class="cnt">4</span></button>
+      <div class="grp">Manage</div>
+      <button data-pane="a-users">☺ Portal users</button>
+      <button data-pane="a-cms">▤ Website content</button>
+      <button data-pane="a-social">◉ Social media</button>
+      <button data-pane="a-auto">⚙ Automations</button>
+      <button data-pane="a-rep">▥ Reports</button>
+      <div class="bottom">GoHighLevel · WordPress · Slack connected</div>
+    </aside>
+    <div class="main"><div class="mw">
+      <div class="pane on" id="a-dash">
+        <div class="topline"><div><h2>Monday, November 9</h2><p class="sub">Everything that needs you today, in one place.</p></div><div style="display:flex;gap:8px"><button class="btn btn-o btn-sm" data-go="site">View website</button><button class="btn btn-p btn-sm" data-go="flow">Run a test lead</button></div></div>
+        <div class="g4">
+          <div class="card kpi"><div class="l">New leads · 7 days</div><div class="v num"><span id="kpi-leads">7</span><span class="d up">▲ 3</span></div><svg class="spark" viewBox="0 0 100 34" preserveAspectRatio="none"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="0,26 14,22 28,24 42,16 56,18 70,10 84,12 100,6"/></svg></div>
+          <div class="card kpi"><div class="l">Bookings this week</div><div class="v num">5<span class="d up">▲ 2</span></div><svg class="spark" viewBox="0 0 100 34" preserveAspectRatio="none"><polyline fill="none" stroke="var(--info)" stroke-width="2" points="0,20 14,24 28,18 42,20 56,12 70,16 84,8 100,10"/></svg></div>
+          <div class="card kpi"><div class="l">Open service requests</div><div class="v num">4<span class="d dn">▼ 2</span></div><svg class="spark" viewBox="0 0 100 34" preserveAspectRatio="none"><polyline fill="none" stroke="var(--warn)" stroke-width="2" points="0,8 14,10 28,6 42,14 56,12 70,20 84,22 100,24"/></svg></div>
+          <div class="card kpi"><div class="l">Newsletter · last send</div><div class="v num">41%<span class="d">open rate</span></div><svg class="spark" viewBox="0 0 100 34" preserveAspectRatio="none"><polyline fill="none" stroke="var(--good)" stroke-width="2" points="0,22 14,20 28,18 42,19 56,14 70,15 84,10 100,8"/></svg></div>
+        </div>
+        <div class="g2" style="margin-top:16px">
+          <div class="card"><h3>Needs attention <a data-pane-go="a-req" style="cursor:pointer">All requests</a></h3><div class="list" style="margin-top:4px">
+            <div class="row"><span class="pill bad"><i></i>Lead</span><div><div class="t1">Priya Shah · Harbor Dental Group</div><div class="t2">Requested a training quote 3 hours ago, no reply yet</div></div><div class="end"><button class="btn btn-o btn-sm">Reply</button></div></div>
+            <div class="row"><span class="pill warn"><i></i>Request</span><div><div class="t1">SR-1039 · Scope change pending client approval</div><div class="t2">Acme Logistics · 4 days waiting</div></div><div class="end"><button class="btn btn-o btn-sm">Nudge</button></div></div>
+            <div class="row"><span class="pill info"><i></i>Booking</span><div><div class="t1">Consultation today 2:00 PM ET · Northwind Freight</div><div class="t2">Reminder sent 1 hr before · Teams link live</div></div><div class="end"><button class="btn btn-o btn-sm">Open notes</button></div></div>
+            <div class="row"><span class="pill gray">Social</span><div><div class="t1">LinkedIn post scheduled for 11:00 AM</div><div class="t2">"5 signs your M365 tenant needs a review"</div></div><div class="end"><button class="btn btn-o btn-sm">Preview</button></div></div>
+          </div></div>
+          <div class="stack">
+            <div class="card"><h3>Today's bookings</h3><div class="list" style="margin-top:4px">
+              <div class="row"><div class="num" style="font-family:var(--mono);font-size:13px;color:var(--muted);min-width:70px">10:00 AM</div><div><div class="t1">Jordan Lee · Acme Logistics</div><div class="t2">M365 check-in · Teams</div></div><div class="end"><span class="pill good"><i></i>Confirmed</span></div></div>
+              <div class="row"><div class="num" style="font-family:var(--mono);font-size:13px;color:var(--muted);min-width:70px">2:00 PM</div><div><div class="t1">Elena Petrova · Northwind Freight</div><div class="t2">Discovery call · Teams</div></div><div class="end"><span class="pill good"><i></i>Confirmed</span></div></div>
+              <div class="row"><div class="num" style="font-family:var(--mono);font-size:13px;color:var(--muted);min-width:70px">4:30 PM</div><div><div class="t1">Daniel Wu · Independent</div><div class="t2">Career coaching · Zoom</div></div><div class="end"><span class="pill warn"><i></i>Not yet confirmed</span></div></div>
+            </div></div>
+            <div class="slack"><div class="ch">clearpath-alerts</div><div id="slack-dash">
+              <div class="sm"><span class="bot">CP</span><div><b>Clearpath Bot</b><span class="tm">9:41 AM</span><div>New consultation booked: <b>Daniel Wu</b> · Career coaching · today 4:30 PM</div></div></div>
+              <div class="sm"><span class="bot">CP</span><div><b>Clearpath Bot</b><span class="tm">8:12 AM</span><div>Service request <b>SR-1042</b> updated to In progress by Ravi K.</div></div></div>
+              <div class="sm"><span class="bot">CP</span><div><b>Clearpath Bot</b><span class="tm">Yesterday</span><div>New portal registration: <b>Marcus Bell</b> (Northwind Freight) · onboarding sequence started</div></div></div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane" id="a-crm">
+        <div class="topline"><div><h2>Leads &amp; CRM</h2><p class="sub">Every website form, booking and portal sign-up lands here automatically. Drag to move stages; each stage can trigger emails.</p></div><button class="btn btn-o btn-sm">+ Add lead manually</button></div>
+        <div class="kanban">
+          <div class="col"><h4>New inquiry <span class="num" id="col-new-n">3</span></h4><div id="col-new">
+            <div class="kc"><b>Priya Shah</b><span>Harbor Dental Group · Training quote</span><div class="amt">Source: website form · 3 hrs ago</div></div>
+            <div class="kc"><b>Omar Haddad</b><span>Haddad &amp; Sons · IT consulting</span><div class="amt">Source: LinkedIn · Yesterday</div></div>
+            <div class="kc"><b>Grace Kim</b><span>Independent · Career coaching</span><div class="amt">Source: website form · Nov 7</div></div></div></div>
+          <div class="col"><h4>Consultation booked <span class="num">2</span></h4>
+            <div class="kc"><b>Elena Petrova</b><span>Northwind Freight · Discovery call today 2pm</span><div class="amt">Reminder sent ✓</div></div>
+            <div class="kc"><b>Daniel Wu</b><span>Independent · Coaching 4:30pm</span><div class="amt">Confirmation pending</div></div></div>
+          <div class="col"><h4>Proposal sent <span class="num">1</span></h4>
+            <div class="kc"><b>Harbor Dental Group</b><span>Cybersecurity Essentials · 6 seats</span><div class="amt">$6,480 · sent Nov 5 · opened 2×</div></div></div>
+          <div class="col"><h4>Won · onboarding <span class="num">1</span></h4>
+            <div class="kc"><b>Northwind Freight</b><span>Managed support · Standard</span><div class="amt">$1,200/mo · portal accounts created</div></div></div>
+        </div>
+        <div class="card" style="margin-top:16px"><h3>Stage automations</h3><div class="toggle"><span>New inquiry → instant acknowledgement email + Slack alert + follow-up in 2 days if no reply</span><span class="sw"></span></div><div class="toggle"><span>Consultation booked → calendar invite, 24h and 1h reminders, Slack alert</span><span class="sw"></span></div><div class="toggle"><span>Proposal sent → reminder email after 3 days if unopened</span><span class="sw"></span></div><div class="toggle"><span>Won → create portal account, send welcome sequence (3 emails), notify team in Slack</span><span class="sw"></span></div></div>
+      </div>
+
+      <div class="pane" id="a-book">
+        <div class="topline"><div><h2>Bookings</h2><p class="sub">Synced both ways with Outlook. Clients book from the website or portal; you never send a link manually.</p></div><button class="btn btn-o btn-sm">Edit availability</button></div>
+        <div class="card tw"><table class="t"><thead><tr><th>When</th><th>Who</th><th>Type</th><th>Meeting</th><th>Reminders</th><th>Status</th></tr></thead><tbody>
+          <tr><td class="num">Mon Nov 9 · 10:00 AM</td><td>Jordan Lee · Acme Logistics</td><td>Check-in</td><td>Teams</td><td>24h ✓ · 1h ✓</td><td><span class="pill good"><i></i>Confirmed</span></td></tr>
+          <tr><td class="num">Mon Nov 9 · 2:00 PM</td><td>Elena Petrova · Northwind Freight</td><td>Discovery</td><td>Teams</td><td>24h ✓ · 1h ✓</td><td><span class="pill good"><i></i>Confirmed</span></td></tr>
+          <tr><td class="num">Mon Nov 9 · 4:30 PM</td><td>Daniel Wu</td><td>Coaching</td><td>Zoom</td><td>24h ✓ · 1h pending</td><td><span class="pill warn"><i></i>Unconfirmed</span></td></tr>
+          <tr><td class="num">Wed Nov 11 · 11:30 AM</td><td>Omar Haddad · Haddad &amp; Sons</td><td>Discovery</td><td>Teams</td><td>scheduled</td><td><span class="pill good"><i></i>Confirmed</span></td></tr>
+          <tr><td class="num">Thu Nov 12 · 10:00 AM</td><td>Jordan Lee · Acme Logistics</td><td>Check-in</td><td>Teams</td><td>scheduled</td><td><span class="pill good"><i></i>Confirmed</span></td></tr>
+          <tr><td class="num">Fri Nov 6 · 3:00 PM</td><td>Grace Kim</td><td>Coaching</td><td>Zoom</td><td>—</td><td><span class="pill bad"><i></i>Rescheduled by client</span></td></tr>
+        </tbody></table></div>
+      </div>
+
+      <div class="pane" id="a-req">
+        <div class="topline"><div><h2>Service requests</h2><p class="sub">Submitted by clients in the portal. Status changes notify the client by email, portal and Slack.</p></div></div>
+        <div class="card tw"><table class="t"><thead><tr><th>ID</th><th>Client</th><th>Request</th><th>Assigned</th><th>Age</th><th>Status</th></tr></thead><tbody>
+          <tr><td class="num">SR-1042</td><td>Acme Logistics</td><td>Shared mailbox not syncing to mobile</td><td>Ravi K.</td><td>1d</td><td><select style="border:1px solid var(--line);border-radius:6px;padding:4px 8px;background:var(--bg);font-size:13px"><option>New</option><option selected>In progress</option><option>Awaiting client</option><option>Resolved</option></select></td></tr>
+          <tr><td class="num">SR-1041</td><td>Northwind Freight</td><td>Set up Teams channels for dispatch</td><td>Priya N.</td><td>2d</td><td><select style="border:1px solid var(--line);border-radius:6px;padding:4px 8px;background:var(--bg);font-size:13px"><option selected>New</option><option>In progress</option><option>Awaiting client</option><option>Resolved</option></select></td></tr>
+          <tr><td class="num">SR-1040</td><td>Harbor Dental Group</td><td>Certificate of completion for 2 participants</td><td>Maya R.</td><td>3d</td><td><select style="border:1px solid var(--line);border-radius:6px;padding:4px 8px;background:var(--bg);font-size:13px"><option>New</option><option selected>In progress</option><option>Awaiting client</option><option>Resolved</option></select></td></tr>
+          <tr><td class="num">SR-1039</td><td>Acme Logistics</td><td>Add 3 new users to pilot group</td><td>Ravi K.</td><td>4d</td><td><select style="border:1px solid var(--line);border-radius:6px;padding:4px 8px;background:var(--bg);font-size:13px"><option>New</option><option>In progress</option><option selected>Awaiting client</option><option>Resolved</option></select></td></tr>
+        </tbody></table></div>
+      </div>
+
+      <div class="pane" id="a-users">
+        <div class="topline"><div><h2>Portal users</h2><p class="sub">Role decides what a person sees. Won leads get an account automatically; you can also add people by hand.</p></div><button class="btn btn-p btn-sm">+ Invite user</button></div>
+        <div class="card tw"><table class="t"><thead><tr><th>Name</th><th>Company</th><th>Role</th><th>Access</th><th>Last login</th><th></th></tr></thead><tbody>
+          <tr><td>Jordan Lee</td><td>Acme Logistics</td><td><span class="pill info"><i></i>Client</span></td><td>M365 migration · Support plan · Cohort 12</td><td>Today</td><td><button class="btn btn-o btn-sm">Edit</button></td></tr>
+          <tr><td>Marcus Bell</td><td>Northwind Freight</td><td><span class="pill info"><i></i>Client</span></td><td>Support plan · Cohort 12</td><td>2 days ago</td><td><button class="btn btn-o btn-sm">Edit</button></td></tr>
+          <tr><td>Maya Rodriguez</td><td>Clearpath</td><td><span class="pill good"><i></i>Trainer</span></td><td>Cohort 12 · Materials · Participant messages</td><td>Today</td><td><button class="btn btn-o btn-sm">Edit</button></td></tr>
+          <tr><td>Ravi Kapoor</td><td>Clearpath</td><td><span class="pill warn"><i></i>Consultant</span></td><td>Assigned projects · Service requests</td><td>Today</td><td><button class="btn btn-o btn-sm">Edit</button></td></tr>
+          <tr><td>Priya Nair</td><td>Clearpath</td><td><span class="pill warn"><i></i>Consultant</span></td><td>Assigned projects · Service requests</td><td>Yesterday</td><td><button class="btn btn-o btn-sm">Edit</button></td></tr>
+          <tr><td>Trevor Mercer</td><td>Clearpath</td><td><span class="pill bad"><i></i>Administrator</span></td><td>Everything</td><td>Now</td><td><button class="btn btn-o btn-sm">Edit</button></td></tr>
+        </tbody></table></div>
+      </div>
+
+      <div class="pane" id="a-cms">
+        <div class="topline"><div><h2>Website content</h2><p class="sub">Edit any page in WordPress with a visual editor. Changes publish instantly; no developer needed.</p></div><button class="btn btn-o btn-sm">Open WordPress editor ↗</button></div>
+        <div class="card tw"><table class="t"><thead><tr><th>Page</th><th>Last edited</th><th>Status</th><th>Views · 30d</th><th></th></tr></thead><tbody>
+          <tr><td>Home</td><td>Nov 6 · you</td><td><span class="pill good"><i></i>Published</span></td><td class="num">1,842</td><td><button class="btn btn-o btn-sm">Edit</button></td></tr>
+          <tr><td>Training programs</td><td>Nov 8 · Maya R.</td><td><span class="pill good"><i></i>Published</span></td><td class="num">963</td><td><button class="btn btn-o btn-sm">Edit</button></td></tr>
+          <tr><td>Services · IT Consulting</td><td>Oct 30 · you</td><td><span class="pill good"><i></i>Published</span></td><td class="num">611</td><td><button class="btn btn-o btn-sm">Edit</button></td></tr>
+          <tr><td>Services · Software Solutions</td><td>Oct 30 · you</td><td><span class="pill good"><i></i>Published</span></td><td class="num">428</td><td><button class="btn btn-o btn-sm">Edit</button></td></tr>
+          <tr><td>Blog · 5 signs your M365 tenant needs a review</td><td>Today · you</td><td><span class="pill warn"><i></i>Scheduled 11:00 AM</span></td><td class="num">—</td><td><button class="btn btn-o btn-sm">Edit</button></td></tr>
+          <tr><td>FAQs</td><td>Oct 12 · you</td><td><span class="pill good"><i></i>Published</span></td><td class="num">302</td><td><button class="btn btn-o btn-sm">Edit</button></td></tr>
+        </tbody></table></div>
+        <div class="g3" style="margin-top:16px"><div class="card kpi"><div class="l">SEO health</div><div class="v num">92<span class="d">/ 100</span></div></div><div class="card kpi"><div class="l">Mobile speed (Core Web Vitals)</div><div class="v num">Good<span class="d up">LCP 1.9s</span></div></div><div class="card kpi"><div class="l">Security</div><div class="v num">OK<span class="d">SSL · firewall · daily backups</span></div></div></div>
+      </div>
+
+      <div class="pane" id="a-social">
+        <div class="topline"><div><h2>Social media</h2><p class="sub">One post, every channel. Schedule from here; comments and DMs from all four land in a single inbox.</p></div><button class="btn btn-p btn-sm">+ New post</button></div>
+        <div class="social-q">
+          <div class="sq"><div class="nets"><span>LinkedIn</span><span>Facebook</span></div><b>5 signs your M365 tenant needs a review</b><div class="when">Today · 11:00 AM · with blog link</div><span class="pill warn"><i></i>Scheduled</span></div>
+          <div class="sq"><div class="nets"><span>Instagram</span><span>Facebook</span></div><b>Cohort 12 · Week 3 recap carousel</b><div class="when">Wed Nov 11 · 9:00 AM</div><span class="pill warn"><i></i>Scheduled</span></div>
+          <div class="sq"><div class="nets"><span>YouTube</span><span>LinkedIn</span></div><b>Webinar replay: Phishing in 2026</b><div class="when">Thu Nov 12 · 1:00 PM</div><span class="pill gray">Draft</span></div>
+          <div class="sq"><div class="nets"><span>LinkedIn</span></div><b>Client story: Northwind Freight goes remote-first</b><div class="when">Mon Nov 16 · 10:00 AM</div><span class="pill gray">Needs approval</span></div>
+        </div>
+        <div class="g2" style="margin-top:16px">
+          <div class="card"><h3>Unified inbox</h3><div class="list"><div class="row"><span class="pill gray">LinkedIn</span><div><div class="t1">Comment · Omar Haddad</div><div class="t2">"Do you do this for teams in Canada?"</div></div><div class="end"><button class="btn btn-o btn-sm">Reply</button></div></div><div class="row"><span class="pill gray">Instagram</span><div><div class="t1">DM · @gracekim.dev</div><div class="t2">"Is the Power BI course beginner-friendly?"</div></div><div class="end"><button class="btn btn-o btn-sm">Reply</button></div></div><div class="row"><span class="pill gray">YouTube</span><div><div class="t1">Comment on webinar replay</div><div class="t2">"Great breakdown, subscribed"</div></div><div class="end"><span class="pill good"><i></i>Liked</span></div></div></div></div>
+          <div class="card"><h3>Channels</h3><div class="toggle"><span>LinkedIn Company Page · 1,204 followers</span><span class="pill good"><i></i>Connected</span></div><div class="toggle"><span>Instagram Business · 836 followers</span><span class="pill good"><i></i>Connected</span></div><div class="toggle"><span>Facebook Page · 2,110 followers</span><span class="pill good"><i></i>Connected</span></div><div class="toggle"><span>YouTube · 412 subscribers</span><span class="pill good"><i></i>Connected</span></div></div>
+        </div>
+      </div>
+
+      <div class="pane" id="a-auto">
+        <div class="topline"><div><h2>Automations</h2><p class="sub">Each one runs without you. Turn any off with a switch.</p></div><button class="btn btn-o btn-sm" data-go="flow">See the live flow</button></div>
+        <div class="card"><div class="toggle"><div><b>Website inquiry → CRM + acknowledgement + Slack</b><div style="font-size:12px;color:var(--muted)">Ran 7 times this week · last: 3 hrs ago</div></div><span class="sw"></span></div>
+        <div class="toggle"><div><b>Booking → calendar invite + Teams link + 24h/1h reminders</b><div style="font-size:12px;color:var(--muted)">Ran 5 times this week</div></div><span class="sw"></span></div>
+        <div class="toggle"><div><b>No-reply follow-up after 2 days</b><div style="font-size:12px;color:var(--muted)">Ran 2 times this week</div></div><span class="sw"></span></div>
+        <div class="toggle"><div><b>Won lead → portal account + 3-email welcome sequence</b><div style="font-size:12px;color:var(--muted)">Ran 1 time this week</div></div><span class="sw"></span></div>
+        <div class="toggle"><div><b>Service request status change → client email + portal notice + Slack</b><div style="font-size:12px;color:var(--muted)">Ran 11 times this week</div></div><span class="sw"></span></div>
+        <div class="toggle"><div><b>Monthly newsletter · first Tuesday 9am</b><div style="font-size:12px;color:var(--muted)">Next: Dec 1 · 318 subscribers</div></div><span class="sw"></span></div>
+        <div class="toggle"><div><b>Cancellation → free the slot + offer 3 new times</b><div style="font-size:12px;color:var(--muted)">Ran 1 time this week</div></div><span class="sw off"></span></div></div>
+      </div>
+
+      <div class="pane" id="a-rep">
+        <div class="topline"><div><h2>Reports</h2><p class="sub">Last 30 days. Pulled from CRM, bookings, portal and social automatically.</p></div></div>
+        <div class="g4"><div class="card kpi"><div class="l">Website visitors</div><div class="v num">4,816</div></div><div class="card kpi"><div class="l">Leads</div><div class="v num">23<span class="d">4.8% conv.</span></div></div><div class="card kpi"><div class="l">Consultations held</div><div class="v num">14</div></div><div class="card kpi"><div class="l">Revenue won</div><div class="v num">$18,420</div></div></div>
+        <div class="g2" style="margin-top:16px">
+          <div class="card"><h3>Leads by source</h3><div class="hbars">
+            <div><span>Website form</span><div class="bar"><i style="width:100%;background:var(--accent)"></i></div><b>9</b></div>
+            <div><span>Booking page</span><div class="bar"><i style="width:67%;background:var(--accent)"></i></div><b>6</b></div>
+            <div><span>LinkedIn</span><div class="bar"><i style="width:44%;background:var(--accent)"></i></div><b>4</b></div>
+            <div><span>Referral</span><div class="bar"><i style="width:33%;background:var(--accent)"></i></div><b>3</b></div>
+            <div><span>Instagram / Facebook</span><div class="bar"><i style="width:11%;background:var(--accent)"></i></div><b>1</b></div></div></div>
+          <div class="card"><h3>Revenue won by service</h3><div class="donut" style="margin-top:12px">
+            <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="52" stroke="var(--surface-2)"/>
+              <circle cx="75" cy="75" r="52" stroke="var(--accent)" stroke-dasharray="137 326.7" stroke-dashoffset="0"/>
+              <circle cx="75" cy="75" r="52" stroke="var(--info)" stroke-dasharray="98 326.7" stroke-dashoffset="-137"/>
+              <circle cx="75" cy="75" r="52" stroke="var(--good)" stroke-dasharray="65 326.7" stroke-dashoffset="-235"/>
+              <circle cx="75" cy="75" r="52" stroke="var(--warn)" stroke-dasharray="26.7 326.7" stroke-dashoffset="-300"/>
+              <text x="75" y="72" text-anchor="middle" font-family="Sora, sans-serif" font-weight="600" font-size="18" fill="var(--fg)">$18.4k</text><text x="75" y="88" text-anchor="middle" font-size="10" fill="var(--muted)">30 days</text></svg>
+            <div class="leg"><div><i style="background:var(--accent)"></i>Training programs<b>$7,730</b></div><div><i style="background:var(--info)"></i>IT consulting<b>$5,520</b></div><div><i style="background:var(--good)"></i>Managed support<b>$3,660</b></div><div><i style="background:var(--warn)"></i>Career coaching<b>$1,510</b></div></div></div></div>
+        </div>
+        <div class="card" style="margin-top:16px"><h3>Bookings per day · last 4 weeks</h3>
+          <div class="weekgrid" id="weekgrid"></div><div class="weeklabels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ================= AUTOMATION FLOW ================= -->
+<section class="app" id="app-flow">
+  <div class="flowwrap">
+    <div class="topline"><div><h2 style="font-size:26px">How the pieces connect</h2><p class="sub">Four tools, one login for the admin. Press "Run a test lead" to watch a website inquiry travel through the whole system.</p></div></div>
+    <div class="arch">
+      <div class="node" id="n1"><div class="nic" style="background:var(--navy-2)"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div><h4><span class="dot"></span>WordPress website + portal</h4><ul><li>Public pages, SEO, analytics</li><li>Client portal with role-based access</li><li>Forms post straight to the CRM</li></ul><div class="st" id="s1"></div></div>
+      <div class="arrow" id="ar1"><span>→</span></div>
+      <div class="node" id="n2"><div class="nic" style="background:var(--accent)"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M5 19l3-3M16 8l3-3"/></svg></div><h4><span class="dot" style="background:var(--accent)"></span>GoHighLevel (operations hub)</h4><ul><li>CRM pipeline and contacts</li><li>Booking calendar ↔ Outlook / Google</li><li>Email + SMS automations, newsletters</li><li>Social planner for 4 networks</li></ul><div class="st" id="s2"></div></div>
+      <div class="arrow" id="ar2"><span>→</span></div>
+      <div class="node" id="n3"><div class="nic" style="background:var(--slack)"><svg class="ico" viewBox="0 0 24 24"><path d="M4 6h16v10H9l-5 4z"/><path d="M8 10h8M8 13h5"/></svg></div><h4><span class="dot" style="background:var(--slack)"></span>Slack + email + calendar</h4><ul><li>Instant alerts to #clearpath-alerts</li><li>Confirmation and reminder emails</li><li>Teams / Zoom / Meet link on the invite</li></ul><div class="st" id="s3"></div></div>
+    </div>
+    <div class="runbar"><button class="btn btn-p" id="runflow">▶ Run a test lead</button><button class="btn btn-o" data-go="site">Or submit the real form on the website</button><span class="hint">Simulated for the demo. In production this is the live chain; typical end-to-end time is under 5 seconds.</span></div>
+    <div class="below">
+      <div class="stack">
+        <div class="card"><h3>Event log</h3><div class="log" id="flowlog" style="margin-top:10px"><span class="t">Waiting. Press "Run a test lead".</span></div></div>
+        <div class="slack"><div class="ch">clearpath-alerts</div><div id="slack-flow"><div class="sm"><span class="bot">CP</span><div><b>Clearpath Bot</b><span class="tm">8:12 AM</span><div>Service request <b>SR-1042</b> updated to In progress by Ravi K.</div></div></div></div></div>
+      </div>
+      <div class="stack">
+        <div class="card"><h3>Confirmation email the lead receives</h3><div class="emailprev" style="margin-top:10px"><div class="eh"><span>From</span><b>Clearpath IT &lt;hello@clearpath-it.com&gt;</b><span>To</span><b id="em-to">—</b><span>Subject</span><b id="em-subj">—</b></div><div class="eb" id="em-body"><span style="color:var(--muted)">Sends automatically about 10 seconds after the form is submitted.</span></div></div></div>
+        <div class="card"><h3>What the admin sees</h3><p style="font-size:14px;color:var(--muted);margin-top:8px">The lead appears at the top of the "New inquiry" column in the CRM, the dashboard counter ticks up, and a Slack alert hits the phone. If nobody replies within 2 days, a follow-up email goes out on its own.</p><button class="btn btn-o btn-sm" style="margin-top:12px" data-go="admin" data-then="a-crm">Open the CRM to see it</button></div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:36px;font-size:18px">Who does what</h3>
+    <div class="tools">
+      <div class="tool"><b>WordPress</b><span>Website, pages, SEO, blog, and the client portal (roles, documents, requests, messages).</span><div class="rep">Admin edits content visually</div></div>
+      <div class="tool"><b>GoHighLevel</b><span>CRM, pipeline, booking calendar, email/SMS automations, newsletter, social scheduler, unified inbox.</span><div class="rep">Replaces Calendly + Mailchimp + a CRM + a social tool</div></div>
+      <div class="tool"><b>Google Workspace / Microsoft 365</b><span>Business email on your domain, calendar that bookings sync to, Meet or Teams links.</span><div class="rep">Your choice; both work</div></div>
+      <div class="tool"><b>Slack (+ Zapier/Make where needed)</b><span>Alerts for inquiries, bookings, sign-ups and request updates. Zapier only bridges anything GHL can't reach directly.</span><div class="rep">Fewer moving parts to maintain</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const toast=(html,ms=2600)=>{const t=$('#toast');t.innerHTML=html;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms)};
+
+  // app switching
+  function showApp(name){
+    $$('.app').forEach(a=>a.classList.toggle('on',a.id==='app-'+name));
+    $$('.demobar nav button').forEach(b=>b.classList.toggle('on',b.dataset.app===name));
+    window.scrollTo({top:0});
+    if(name==='portal' && !portalRole){ showPortalScreen('portal-login'); }
+    try{ if(location.hash!=='#'+name) history.replaceState(null,'','#'+name);}catch(e){}
+  }
+  $$('.demobar nav button').forEach(b=>b.addEventListener('click',()=>showApp(b.dataset.app)));
+  document.addEventListener('click',e=>{
+    const go=e.target.closest('[data-go]'); if(go){
+      const v=go.dataset.go;
+      if(v==='portal-login'){portalRole=null;showPortalScreen('portal-login');showApp('portal');return;}
+      showApp(v);
+      if(go.dataset.then){ setPane(go.dataset.then); }
+    }
+  });
+
+  // portal
+  let portalRole=null;
+  function showPortalScreen(id){ ['portal-login','portal-client','portal-trainer'].forEach(x=>$('#'+x).hidden=(x!==id)); }
+  $$('#portal-login [data-role]').forEach(b=>b.addEventListener('click',()=>{
+    const r=b.dataset.role;
+    if(r==='admin'){ showApp('admin'); toast('Signed in as <b>Administrator</b>'); return; }
+    portalRole=r; showPortalScreen('portal-'+r); toast('Signed in as <b>'+(r==='client'?'Jordan Lee (Client)':'Maya Rodriguez (Trainer)')+'</b>');
+  }));
+
+  // panes (sidebars)
+  function setPane(id){
+    const pane=document.getElementById(id); if(!pane) return;
+    const shell=pane.closest('.shell');
+    shell.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id===id));
+    shell.querySelectorAll('.side button[data-pane]').forEach(b=>b.classList.toggle('on',b.dataset.pane===id));
+    window.scrollTo({top:0});
+  }
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-pane]'); if(b){ setPane(b.dataset.pane); return; }
+    const g=e.target.closest('[data-pane-go]'); if(g){ setPane(g.dataset.paneGo); }
+  });
+
+  // new service request (client)
+  $('#newreq').addEventListener('click',()=>{
+    const tb=$('#reqbody'); const tr=document.createElement('tr'); tr.className='kc new';
+    tr.innerHTML='<td class="num">SR-1043</td><td>Set up email signature template for all staff</td><td>Today</td><td>Unassigned</td><td><span class="pill info"><i></i>New</span></td>';
+    tb.prepend(tr); toast('Request <b>SR-1043</b> submitted · admin notified in Slack');
+    addSlack($('#slack-dash'),'New service request <b>SR-1043</b> from Jordan Lee (Acme Logistics): "Email signature template for all staff"');
+  });
+
+  function addSlack(container,html){
+    const d=document.createElement('div'); d.className='sm new';
+    const t=new Date(); const tm=t.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+    d.innerHTML='<span class="bot">CP</span><div><b>Clearpath Bot</b><span class="tm">'+tm+'</span><div>'+html+'</div></div>';
+    container.prepend(d);
+  }
+
+  // lead form on public site → run the flow with real values
+  $('#leadform').addEventListener('submit',e=>{
+    e.preventDefault();
+    const lead={name:$('#lead-name').value||'Jordan Lee',co:$('#lead-co').value||'Acme Logistics',email:$('#lead-email').value||'jordan@acme.com',svc:$('#lead-svc').value};
+    showApp('flow'); runFlow(lead);
+  });
+  $('#runflow').addEventListener('click',()=>runFlow({name:'Priya Shah',co:'Harbor Dental Group',email:'priya@harbordental.com',svc:'Team training program'}));
+
+  let running=false;
+  function runFlow(lead){
+    if(running) return; running=true;
+    const log=$('#flowlog'); log.innerHTML='';
+    ['n1','n2','n3','ar1','ar2'].forEach(i=>$('#'+i).classList.remove('lit'));
+    ['s1','s2','s3'].forEach(i=>{$('#'+i).textContent='';$('#'+i).classList.remove('ok')});
+    $('#em-to').textContent='—';$('#em-subj').textContent='—';$('#em-body').innerHTML='<span style="color:var(--muted)">Sending…</span>';
+    const t0=Date.now(); const line=(txt,ok)=>{const d=document.createElement('div');d.innerHTML='<span class="t">+'+((Date.now()-t0)/1000).toFixed(1)+'s</span> '+(ok?'<span class="ok">✓</span> ':'')+txt;log.appendChild(d)};
+    const steps=[
+      [0,()=>{$('#n1').classList.add('lit');$('#s1').textContent='form submitted';line('Form submitted on clearpath-it.com by <b>'+lead.name+'</b> ('+lead.co+')')}],
+      [700,()=>{$('#s1').textContent='posted to CRM webhook';$('#s1').classList.add('ok');$('#ar1').classList.add('lit');line('Payload sent to GoHighLevel inbound webhook',true)}],
+      [1400,()=>{$('#n2').classList.add('lit');$('#s2').textContent='contact created · tagged "'+lead.svc.split(' ')[0].toLowerCase()+'"';line('Contact created in CRM · pipeline stage: <b>New inquiry</b> · source: website form',true);
+        const kc=document.createElement('div');kc.className='kc new';kc.innerHTML='<b>'+lead.name+'</b><span>'+lead.co+' · '+lead.svc+'</span><div class="amt">Source: website form · just now</div>';$('#col-new').prepend(kc);
+        $('#col-new-n').textContent=$('#col-new').children.length;const lc=$('#leadcount');lc.textContent=+lc.textContent+1;$('#kpi-leads').textContent=lc.textContent;}],
+      [2300,()=>{$('#s2').textContent='workflow "New inquiry" triggered';line('Workflow <b>New inquiry</b> started: acknowledgement email → Slack alert → 2-day follow-up timer',true)}],
+      [3000,()=>{$('#ar2').classList.add('lit');$('#n3').classList.add('lit');$('#s3').textContent='email queued';
+        $('#em-to').textContent=lead.name+' <'+lead.email+'>';$('#em-subj').textContent='Got your request, '+lead.name.split(' ')[0]+' — pick a time that works';
+        $('#em-body').innerHTML='Hi '+lead.name.split(' ')[0]+',<br><br>Thanks for reaching out about <b>'+lead.svc.toLowerCase()+'</b> for '+lead.co+'. We\'ve received your details and one of our consultants will be ready to talk you through options.<br><br>Pick a 30-minute slot that suits you:<br><span class="cta">Choose a time</span><br>The invite will include a Teams link and we\'ll send a reminder the day before.<br><br>Talk soon,<br>The Clearpath team<br><span style="color:var(--muted);font-size:12px">Clearpath IT Consulting &amp; Training · (312) 555-0148</span>';
+        line('Acknowledgement email sent to '+lead.email,true)}],
+      [3700,()=>{$('#s3').textContent='Slack alert posted';$('#s3').classList.add('ok');$('#s2').classList.add('ok');
+        const html='New website inquiry: <b>'+lead.name+'</b> · '+lead.co+'<div class="att"><div><span>Needs</span><span>'+lead.svc+'</span></div><div><span>Email</span><span>'+lead.email+'</span></div><div><span>Stage</span><span>New inquiry · follow-up in 2 days if no reply</span></div></div>';
+        addSlack($('#slack-flow'),html);addSlack($('#slack-dash'),html);
+        line('Posted to Slack <b>#clearpath-alerts</b> with lead details and a link to the contact',true)}],
+      [4400,()=>{line('Follow-up timer set: if no reply by '+new Date(Date.now()+2*864e5).toLocaleDateString([], {month:'short',day:'numeric'})+' 9:00 AM, send "Still interested?" email',true);line('<span class="ok">Done.</span> Admin action needed: none, until they want to reply.');running=false;toast('Lead landed in the CRM. <b>Open the admin dashboard</b> to see it.')}]
+    ];
+    steps.forEach(([ms,fn])=>setTimeout(fn,ms));
+  }
+
+  // isometric platform illustration
+  (function iso(){
+    const svg=$('#iso-hero'); if(!svg) return;
+    const P=(u,v,z=0)=>[(u-v)*0.866,(u+v)*0.5-z];
+    const pts=a=>a.map(p=>p.join(',')).join(' ');
+    const NS='http://www.w3.org/2000/svg'; const el=(n,at)=>{const e=document.createElementNS(NS,n);for(const k in at)e.setAttribute(k,at[k]);return e};
+    const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function box(u0,v0,u1,v1,z,h,fill){
+      const g=el('g',{});
+      const top=[P(u0,v0,z+h),P(u1,v0,z+h),P(u1,v1,z+h),P(u0,v1,z+h)];
+      const right=[P(u1,v0,z+h),P(u1,v1,z+h),P(u1,v1,z),P(u1,v0,z)];
+      const left=[P(u0,v1,z+h),P(u1,v1,z+h),P(u1,v1,z),P(u0,v1,z)];
+      g.appendChild(el('polygon',{points:pts(left),fill}));g.appendChild(el('polygon',{points:pts(left),fill:'#000',opacity:.18}));
+      g.appendChild(el('polygon',{points:pts(right),fill}));g.appendChild(el('polygon',{points:pts(right),fill:'#000',opacity:.32}));
+      g.appendChild(el('polygon',{points:pts(top),fill}));
+      svg.appendChild(g); return g;
+    }
+    // slab
+    box(-20,-20,260,260,0,10,'var(--surface-2)');
+    svg.appendChild(el('polygon',{points:pts([P(-20,-20,10),P(260,-20,10),P(260,260,10),P(-20,260,10)]),fill:'none',stroke:'var(--line)','stroke-width':1}));
+    const tiles=[
+      {u:0,v:0,c:'var(--navy-2)',label:'Website',sub:'WordPress',lx:0,ly:-48,anchor:'middle'},
+      {u:190,v:0,c:'var(--info)',label:'Client portal',sub:'roles · docs · requests',lx:236,ly:128,anchor:'start'},
+      {u:0,v:190,c:'var(--good)',label:'Calendar + email',sub:'Outlook or Google',lx:-236,ly:128,anchor:'end'},
+      {u:190,v:190,c:'var(--slack)',label:'Slack alerts',sub:'#clearpath-alerts',lx:0,ly:292,anchor:'middle'}];
+    tiles.forEach(t=>{
+      box(t.u,t.v,t.u+70,t.v+70,10,12,t.c);
+      // screen inset + two rows
+      svg.appendChild(el('polygon',{points:pts([P(t.u+12,t.v+12,22),P(t.u+58,t.v+12,22),P(t.u+58,t.v+58,22),P(t.u+12,t.v+58,22)]),fill:'#fff',opacity:.9}));
+      [[20,22],[20,34],[20,46]].forEach(([a,b],i)=>svg.appendChild(el('line',{x1:P(t.u+a,t.v+b,22.5)[0],y1:P(t.u+a,t.v+b,22.5)[1],x2:P(t.u+a+(i==1?22:30),t.v+b,22.5)[0],y2:P(t.u+a+(i==1?22:30),t.v+b,22.5)[1],stroke:t.c,'stroke-width':3,'stroke-linecap':'round',opacity:.7})));
+      const tx=el('text',{x:t.lx,y:t.ly,'text-anchor':t.anchor});tx.textContent=t.label;svg.appendChild(tx);
+      const ts=el('text',{x:t.lx,y:t.ly+13,'text-anchor':t.anchor,class:'lbl-s'});ts.textContent=t.sub;svg.appendChild(ts);
+    });
+    // central admin block
+    box(95,95,165,165,10,50,'var(--accent)');
+    // mini dashboard on the block's top face
+    svg.appendChild(el('polygon',{points:pts([P(103,103,60.5),P(157,103,60.5),P(157,157,60.5),P(103,157,60.5)]),fill:'#fff',opacity:.92}));
+    [[110,110,16],[110,122,30],[110,134,22],[110,146,36]].forEach(([a,b,w])=>svg.appendChild(el('line',{x1:P(a,b,61)[0],y1:P(a,b,61)[1],x2:P(a+w,b,61)[0],y2:P(a+w,b,61)[1],stroke:'var(--accent)','stroke-width':4,'stroke-linecap':'round'})));
+    const lab=el('text',{x:0,y:134,'text-anchor':'middle',fill:'#fff',style:'fill:#fff'});lab.textContent='Admin dashboard';svg.appendChild(lab);
+    const lab2=el('text',{x:0,y:147,'text-anchor':'middle',class:'lbl-s',style:'fill:#FBEFE3'});lab2.textContent='one login, everything inside';svg.appendChild(lab2);
+    // connectors with moving pulses
+    const targets=[[P(35,35,22),P(130,95,60)],[P(225,35,22),P(165,130,60)],[P(35,225,22),P(95,130,60)],[P(225,225,22),P(130,165,60)]];
+    targets.forEach(([a,b],i)=>{
+      const d=`M${a[0]} ${a[1]} L${b[0]} ${b[1]}`;
+      svg.appendChild(el('path',{d,class:'edge'}));
+      if(!reduce){const c=el('circle',{r:4,class:'pulse'});const am=el('animateMotion',{dur:'2.6s',repeatCount:'indefinite',begin:(i*0.6)+'s',path:d});c.appendChild(am);svg.appendChild(c);}
+    });
+  })();
+
+  // bookings heatmap (4 weeks x 7 days)
+  (function(){
+    const g=$('#weekgrid'); if(!g) return;
+    const data=[1,2,0,3,1,0,0, 2,1,3,2,2,0,0, 1,3,2,1,2,1,0, 2,2,1,3,1,0,0];
+    data.forEach(n=>{const d=document.createElement('div');d.title=n+' booking'+(n==1?'':'s');const i=document.createElement('i');i.style.height=(n/3*100)+'%';d.appendChild(i);g.appendChild(d)});
+  })();
+
+  // hash routing
+  const valid=['site','portal','admin','flow'];
+  const h=(location.hash||'').replace('#','');
+  if(valid.includes(h)) showApp(h);
+  window.addEventListener('hashchange',()=>{const x=(location.hash||'').replace('#','');if(valid.includes(x))showApp(x)});
+})();
+</script>
+
+</body>
+</html>
